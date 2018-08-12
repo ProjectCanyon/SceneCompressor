@@ -124,6 +124,8 @@ namespace SceneCompressor.Cli
                 inputSceneRoot.WriteTo(outputSceneJsonWriter);
             }
 
+            _options.Target.Refresh();
+
             Console.WriteLine($"Scene written to '{_options.Target.FullName}' OK, compressed {_options.Source.Length.Bytes().ToString("MB")} -> {_options.Target.Length.Bytes().ToString("MB")}.");
             Console.WriteLine("Complete!");
         }

@@ -60,9 +60,13 @@ namespace SceneCompressor.Cli
                     return -1;
                 }
 
-                int passes = 2; // default to 4 passes
-                if (!passesOption.HasValue())
-                    int.TryParse(passesOption.Value(), out passes);
+                int passes = 2;
+                if (!passesOption.HasValue()
+                    && int.TryParse(passesOption.Value(), out int parsedPasses)
+                    && parsedPasses > 0)
+                {
+                    passes = parsedPasses;
+                }
 
                 if (!forceOption.HasValue() || !bool.TryParse(forceOption.Value(), out bool force))
                     force = false;
@@ -95,7 +99,5 @@ namespace SceneCompressor.Cli
             Console.ReadKey();
 #endif
         }
-
-      
     }
 }
