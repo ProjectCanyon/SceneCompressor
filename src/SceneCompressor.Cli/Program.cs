@@ -14,7 +14,7 @@ namespace SceneCompressor.Cli
 
             var app = new CommandLineApplication
             {
-                FullName = "ProjectCanyon's VAM Scene Compresser",
+                FullName = "ProjectCanyon's VAM Scene Compressor",
                 Description = "This tool will compress and smooth VaM scene animations using linear interpolation.",
                 LongVersionGetter = () => "Version 1.0.0",
                 ShortVersionGetter = () => "v1.0.0",
