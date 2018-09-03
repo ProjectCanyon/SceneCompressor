@@ -28,88 +28,100 @@ namespace SceneCompressor.Cli
 
             foreach (JArray stepList in stepLists)
             {
-                var id = stepList.Parent.Parent.SelectToken(".id").Value<string>();
-
-                var steps = new List<Step>();
-
-                for (int i = 0; i < stepList.Count; i++)
+                try
                 {
-                    var compressed = stepList[i].SelectToken(".compressed")?.Value<bool>() ?? false;
-                    
-                    var timeStep = stepList[i].SelectToken(".timeStep").Value<float>();
+                    var id = stepList.Parent.Parent.SelectToken(".id").Value<string>();
 
-                    var pX = stepList[i].SelectToken(".position.x").Value<float>();
-                    var pY = stepList[i].SelectToken(".position.y").Value<float>();
-                    var pZ = stepList[i].SelectToken(".position.z").Value<float>();
-
-                    var position = new Vector3(pX, pY, pZ);
-
-                    var rX = stepList[i].SelectToken(".rotation.x").Value<float>();
-                    var rY = stepList[i].SelectToken(".rotation.y").Value<float>();
-                    var rZ = stepList[i].SelectToken(".rotation.z").Value<float>();
-                    var rW = stepList[i].SelectToken(".rotation.w").Value<float>();
-
-                    var rotation = new Quaternion(rX, rY, rZ, rW);
-
-                    steps.Add(new Step(timeStep, position, rotation, compressed));
-                }
-
-                for (int p = 0; p < _options.Passes; p++)
-                {
-                    var pass = new List<Step>();
-
-                    for (int s = 1; s < steps.Count - 2; s += 2)
+                    if (string.Equals(id, "AnimationPattern"))
                     {
-                        var s0 = steps[s - 1];
-                        var s1 = steps[s];
-
-                        if (!_options.Force && s0.Compressed)
-                        {
-                            // Already compressed, skip
-                            pass.Add(s0);
-                            pass.Add(s1);
-                            continue;
-                        }
-
-                        var timeStep = (s1.Timestep - s0.Timestep) * 0.5f + s0.Timestep;
-                        var pI = Vector3.Lerp(s0.Position, s1.Position, 0.5f);
-                        var rI = Quaternion.Lerp(s0.Rotation, s1.Rotation, 0.5f);
-
-                        pass.Add(new Step(timeStep, pI, rI, false));
-
-                        if (_options.Verbose)
-                            Console.WriteLine($"P:{p:00} S:{s:00000} T:{timeStep} P:{pI} R:{rI}");
+                        continue;
                     }
 
-                    steps = pass;
-                }
+                    var steps = new List<Step>();
 
-                Console.WriteLine($"Compressed animation '{id}' {stepList.Count} -> {steps.Count} steps using {_options.Passes} passes OK.");
-
-                stepList.Clear();
-
-                foreach (Step step in steps)
-                {
-                    stepList.Add(JToken.FromObject(new
+                    for (int i = 0; i < stepList.Count; i++)
                     {
-                        timeStep = step.Timestep,
-                        positionOn = true,
-                        rotationOn = true,
-                        position = new
+                        var compressed = stepList[i].SelectToken(".compressed")?.Value<bool>() ?? false;
+
+                        var timeStep = stepList[i].SelectToken(".timeStep").Value<float>();
+
+                        var pX = stepList[i].SelectToken(".position.x").Value<float>();
+                        var pY = stepList[i].SelectToken(".position.y").Value<float>();
+                        var pZ = stepList[i].SelectToken(".position.z").Value<float>();
+
+                        var position = new Vector3(pX, pY, pZ);
+
+                        var rX = stepList[i].SelectToken(".rotation.x").Value<float>();
+                        var rY = stepList[i].SelectToken(".rotation.y").Value<float>();
+                        var rZ = stepList[i].SelectToken(".rotation.z").Value<float>();
+                        var rW = stepList[i].SelectToken(".rotation.w").Value<float>();
+
+                        var rotation = new Quaternion(rX, rY, rZ, rW);
+
+                        steps.Add(new Step(timeStep, position, rotation, compressed));
+                    }
+
+                    for (int p = 0; p < _options.Passes; p++)
+                    {
+                        var pass = new List<Step>();
+
+                        for (int s = 1; s < steps.Count - 2; s += 2)
                         {
-                            x = step.Position.X,
-                            y = step.Position.Y,
-                            z = step.Position.Z
-                        },
-                        rotation = new
+                            var s0 = steps[s - 1];
+                            var s1 = steps[s];
+
+                            if (!_options.Force && s0.Compressed)
+                            {
+                                // Already compressed, skip
+                                pass.Add(s0);
+                                pass.Add(s1);
+                                continue;
+                            }
+
+                            var timeStep = (s1.Timestep - s0.Timestep) * 0.5f + s0.Timestep;
+                            var pI = Vector3.Lerp(s0.Position, s1.Position, 0.5f);
+                            var rI = Quaternion.Lerp(s0.Rotation, s1.Rotation, 0.5f);
+
+                            pass.Add(new Step(timeStep, pI, rI, false));
+
+                            if (_options.Verbose)
+                                Console.WriteLine($"P:{p:00} S:{s:00000} T:{timeStep} P:{pI} R:{rI}");
+                        }
+
+                        steps = pass;
+                    }
+
+                    Console.WriteLine($"Compressed animation '{id}' {stepList.Count} -> {steps.Count} steps using {_options.Passes} passes OK.");
+
+                    stepList.Clear();
+
+                    foreach (Step step in steps)
+                    {
+                        stepList.Add(JToken.FromObject(new
                         {
-                            x = step.Rotation.X,
-                            y = step.Rotation.Y,
-                            z = step.Rotation.Z,
-                            w = step.Rotation.W
-                        },
-                        compressed = true
-                    }));
+                            timeStep = step.Timestep,
+                            positionOn = true,
+                            rotationOn = true,
+                            position = new
+                            {
+                                x = step.Position.X,
+                                y = step.Position.Y,
+                                z = step.Position.Z
+                            },
+                            rotation = new
+                            {
+                                x = step.Rotation.X,
+                                y = step.Rotation.Y,
+                                z = step.Rotation.Z,
+                                w = step.Rotation.W
+                            },
+                            compressed = true
+                        }));
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine($"Unexpected format for step list, skipping: {exception.Message}");
                 }
             }
 
@@ -127,6 +139,15 @@ namespace SceneCompressor.Cli
             _options.Target.Refresh();
 
             Console.WriteLine($"Scene written to '{_options.Target.FullName}' OK, compressed {_options.Source.Length.Bytes().ToString("MB")} -> {_options.Target.Length.Bytes().ToString("MB")}.");
+
+            // Look for associated image
+            var sourceImagePath = new FileInfo(_options.Source.FullName.Replace(".json", ".jpg"));
+            if (sourceImagePath.Exists)
+            {
+                var targetImagePath = new FileInfo(_options.Target.FullName.Replace(".json", ".jpg"));
+                sourceImagePath.CopyTo(targetImagePath.FullName, true);
+            }
+            
             Console.WriteLine("Complete!");
         }
     }

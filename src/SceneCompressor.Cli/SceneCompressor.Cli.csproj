@@ -6,6 +6,10 @@
     <AssemblyName>SceneCompressor</AssemblyName>
     <RootNamespace>SceneCompressor.Cli</RootNamespace>
     <StartupObject>SceneCompressor.Cli.Program</StartupObject>
+    <Version>1.0.1</Version>
+    <ApplicationIcon>if_compress_35891.ico</ApplicationIcon>
+    <Company>Project Canyon</Company>
+    <Authors>Project Canyon</Authors>
   </PropertyGroup>
 
   <ItemGroup>

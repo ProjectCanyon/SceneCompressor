@@ -16,13 +16,11 @@ namespace SceneCompressor.Cli
             {
                 FullName = "ProjectCanyon's VAM Scene Compressor",
                 Description = "This tool will compress and smooth VaM scene animations using linear interpolation.",
-                LongVersionGetter = () => "Version 1.0.0",
-                ShortVersionGetter = () => "v1.0.0",
+                LongVersionGetter = () => "Version 1.0.1",
+                ShortVersionGetter = () => "v1.0.1",
             };
-            
-            var sourceOption = app.Option("-s|--source",
-                @"Source, C:\VaM\Saves\scene\scene.json",
-                CommandOptionType.SingleValue);
+
+            var sourceArg = app.Argument("source", @"Source, C:\VaM\Saves\scene\scene.json");
 
             var targetOption = app.Option("-t|--target",
                 @"Target, C:\VaM\Saves\scene\scene-compressed.json",
@@ -42,14 +40,14 @@ namespace SceneCompressor.Cli
 
             app.OnExecute(() =>
             {
-                if (!sourceOption.HasValue() || !targetOption.HasValue())
+                if (string.IsNullOrEmpty(sourceArg.Value))
                 {
                     app.ShowHelp();
                     return 0;
                 }
 
-                var sourceFileInfo = new FileInfo(sourceOption.Value());
-                var targetFileInfo = new FileInfo(targetOption.Value());
+                var sourceFileInfo = new FileInfo(sourceArg.Value);
+                var targetFileInfo = new FileInfo(!targetOption.HasValue() ? sourceFileInfo.FullName.Replace(".json", "-compressed.json") : targetOption.Value());
 
                 if (string.Equals(sourceFileInfo.FullName, targetFileInfo.FullName, StringComparison.InvariantCultureIgnoreCase))
                 {
